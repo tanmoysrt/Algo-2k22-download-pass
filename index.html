@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorhythm  2k22</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container text-center mt-5" style="max-width: 500px;">
+        <img src="./logo.png" alt="" style="max-width: 400px;">
+        <form class="mt-5" id="formEmail">
+            <div class="mb-3">
+              <label for="inputemail" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="inputemail" aria-describedby="emailHelp" required>
+              <div id="emailHelp" class="form-text">Registered email address previously filled in G-form</div>
+            </div>
+            <button class="btn btn-dark text-center w-100" id="submitBtn">Submit Details</button>
+        </form>
+        
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="passDownloadModal" tabindex="-1" aria-labelledby="passDownloadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="passDownloadModalLabel">Download Pass</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <h5>Name : <span id="participantName"></span></h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="downloadPass()">Download Pass</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <p style="display: none" id="pass-link"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script>
+        let lock = false;
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById('formEmail').addEventListener('submit', async function(evt){
+                evt.preventDefault();
+                await downloadDetails();
+            })
+        });
+
+        function downloadPass(){
+            var link = document.getElementById("pass-link").innerHTML;
+            window.open("https://algorhythm.tanmoy.codes"+link, '_blank');
+        }
+
+        async function downloadDetails() {
+            if(lock) return;
+            lock = true;
+            let submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = `<div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>`;
+
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+
+            var raw = JSON.stringify({
+                "email": document.getElementById('inputemail').value
+            });
+
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+
+            fetch("https://algorhythm.tanmoy.codes/resolve-pass", requestOptions)
+            .then(response => response.json())
+            .then(result =>{
+                console.log(result);
+                if(result.code == 200){
+                    if(result.success){
+                        document.getElementById('participantName').innerHTML = result.payload.name;
+                        document.getElementById('pass-link').innerHTML = result.payload.link;
+                        var myModal = new bootstrap.Modal(document.getElementById('passDownloadModal'), {
+                            keyboard: false
+                        })
+                        myModal.show();
+                    }
+                    else{
+                    alert(result.message);
+                    }
+                }
+                else{
+                    alert(result.message);
+                }
+            })
+            .catch(error => console.log('error', error));
+            
+            submitBtn.innerHTML = `Submit Details`;
+            lock = false;
+        }
+    </script>
+</body>
+</html>
